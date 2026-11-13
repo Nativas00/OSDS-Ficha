@@ -19,52 +19,49 @@ export default function LoginScreen({ navigation }: Props) {
     <View style={styles.container}>
       <ScreenHeader></ScreenHeader>
 
-      <View style={[accountStyles.content, accountStyles.loginContent]}>
-        <Text style={accountStyles.title}>LOGIN</Text>
+      <View style={accountStyles.content}>
+        <View style={accountStyles.loginContent}>
+          <Text style={accountStyles.title}>LOGIN</Text>
 
-        <View style={accountStyles.form}>
-          <FormInput
-            label="Endereço de e-mail"
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-          ></FormInput>
+          <View style={accountStyles.form}>
+            <FormInput
+              label="Endereço de e-mail"
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+            ></FormInput>
 
-          <FormInput
-            label="Senha"
-            value={senha}
-            onChangeText={setSenha}
-            secureTextEntry
-          ></FormInput>
+            <FormInput
+              label="Senha"
+              value={senha}
+              onChangeText={setSenha}
+              secureTextEntry
+            ></FormInput>
 
-          <TouchableOpacity
-            style={[styles.primaryButton, accountStyles.formPrimaryButton]}
-          >
-            <Text
-              style={[styles.primaryButtonText, accountStyles.formButtonText]}
+            <View style={styles.gapSmall}>
+              <TouchableOpacity
+                style={accountStyles.formPrimaryButton}
+                onPress={() =>
+                  navigation.reset({ index: 0, routes: [{ name: "Home" }] })
+                }
+              >
+                <Text style={styles.primaryButtonText}>Iniciar Sessão</Text>
+              </TouchableOpacity>
+            </View>
+
+            <Text style={accountStyles.formText}>Ou</Text>
+
+            <TouchableOpacity
+              style={accountStyles.formSecondaryButton}
+              onPress={() => navigation.navigate("Register")}
             >
-              Iniciar Sessão
-            </Text>
-          </TouchableOpacity>
+              <Text style={styles.secondaryButtonText}>Criar uma conta</Text>
+            </TouchableOpacity>
 
-          <Text style={[accountStyles.formText, accountStyles.separator]}>
-            Ou
-          </Text>
-
-          <TouchableOpacity
-            style={[styles.secondaryButton, accountStyles.formSecondaryButton]}
-            onPress={() => navigation.navigate("Register")}
-          >
-            <Text
-              style={[styles.secondaryButtonText, accountStyles.formButtonText]}
-            >
-              Criar uma conta
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={accountStyles.forgotButton}>
-            <Text style={accountStyles.formText}>Esqueci minha senha</Text>
-          </TouchableOpacity>
+            <TouchableOpacity>
+              <Text style={accountStyles.formText}>Esqueci minha senha</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </View>

@@ -82,17 +82,24 @@ export default function RegisterScreen({ navigation }: Props) {
             </Text>
           </TouchableOpacity>
 
+          <View style={styles.gapMedium}>
+            <TouchableOpacity
+              style={accountStyles.formPrimaryButton}
+              onPress={() =>
+                navigation.reset({ index: 0, routes: [{ name: "Home" }] })
+              }
+            >
+              <Text style={styles.primaryButtonText}>Criar conta</Text>
+            </TouchableOpacity>
+          </View>
+
           <View style={accountStyles.links}>
             <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-              <Text style={[accountStyles.smallText, accountStyles.linkText]}>
-                Já possui uma conta?
-              </Text>
+              <Text style={accountStyles.smallText}>Já possui uma conta?</Text>
             </TouchableOpacity>
 
             <TouchableOpacity onPress={() => navigation.navigate("Login")}>
-              <Text style={[accountStyles.smallText, accountStyles.linkText]}>
-                Entrar
-              </Text>
+              <Text style={accountStyles.smallText}>Entrar</Text>
             </TouchableOpacity>
           </View>
         </View>

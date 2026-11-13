@@ -1,8 +1,22 @@
 import { StyleSheet } from "react-native";
 
-// Estilos gerais do aplicativo, procure utilizar esses estilos ao inves de criar 
-// novos do mesmo João Gonçalves, para manter a consistência visual do aplicativo e o
-// codigo bem polido.
+import type { ViewStyle } from "react-native";
+
+export const boxBase: ViewStyle = {
+  flexDirection: "row",
+  justifyContent: "space-between",
+  alignItems: "center",
+  paddingVertical: 10,
+  paddingHorizontal: 12,
+  borderRadius: 12,
+  borderWidth: 1.5,
+  borderColor: "#FFFFFF",
+  elevation: 4,
+  shadowColor: "#FFFFFF",
+  shadowOpacity: 0.4,
+  shadowRadius: 6,
+  shadowOffset: { width: 0, height: 0 },
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -17,16 +31,22 @@ const styles = StyleSheet.create({
     borderBottomColor: "#D9B77E",
   },
 
-  // Botões
   primaryButton: {
     backgroundColor: "#D9B77E",
     alignItems: "center",
     justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 30,
   },
 
   secondaryButton: {
     alignItems: "center",
     justifyContent: "center",
+    marginTop: 14,
+    paddingVertical: 12,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: "#D9B77E",
   },
 
   primaryButtonText: {
@@ -43,6 +63,7 @@ const styles = StyleSheet.create({
 
   backButton: {
     position: "absolute",
+    top: 40,
     left: 16,
     width: 40,
     height: 40,
@@ -59,7 +80,6 @@ const styles = StyleSheet.create({
   },
 
   inputContainer: {
-    width: "100%",
     marginBottom: 14,
   },
 
@@ -86,7 +106,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingHorizontal: 32,
-    paddingBottom: 24,
+    paddingBottom: 120,
   },
 
   title: {
@@ -127,17 +147,46 @@ const styles = StyleSheet.create({
     marginTop: 32,
   },
 
-  pillPrimary: {
-    paddingVertical: 14,
-    borderRadius: 30,
+  bannerLogo: {
+    height: 82,
+    aspectRatio: 783 / 164,
+    marginTop: 80,
+    alignSelf: "center",
   },
 
-  pillSecondary: {
-    marginTop: 14,
-    paddingVertical: 12,
-    borderRadius: 30,
-    borderWidth: 2,
-    borderColor: "#D9B77E",
+  canyon: {
+    position: "absolute",
+    right: 0,
+    bottom: 0,
+    aspectRatio: 268 / 586,
+  },
+
+  homeScroll: {
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  },
+
+  homeTitle: {
+    marginTop: 26,
+    fontSize: 24,
+    fontWeight: "bold",
+    letterSpacing: 3,
+    color: "#D9B77E",
+    textTransform: "uppercase",
+  },
+
+  gapSmall: {
+    marginTop: 6,
+  },
+
+  gapMedium: {
+    marginTop: 16,
+  },
+
+  lightBox: {
+    ...boxBase,
+    borderWidth: 0,
+    backgroundColor: "#D9D9D9",
   },
 });
 

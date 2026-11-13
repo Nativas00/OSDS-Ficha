@@ -35,14 +35,14 @@ export default function FirstScreen({ navigation }: Props) {
 
         <View style={styles.buttons}>
           <TouchableOpacity
-            style={[styles.primaryButton, styles.pillPrimary]}
+            style={styles.primaryButton}
             onPress={() => navigation.navigate("Login")}
           >
             <Text style={styles.primaryButtonText}>Entrar</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={[styles.secondaryButton, styles.pillSecondary]}
+            style={styles.secondaryButton}
             onPress={() => navigation.navigate("Register")}
           >
             <Text style={styles.secondaryButtonText}>Criar Conta</Text>

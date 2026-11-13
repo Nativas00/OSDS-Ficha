@@ -1,9 +1,13 @@
 import { StyleSheet } from "react-native";
 
 const accountStyles = StyleSheet.create({
-  // style utilizados em Login e criação de conta
   content: {
     height: 790,
+  },
+
+  loginContent: {
+    flex: 1,
+    justifyContent: "center",
   },
 
   title: {
@@ -27,46 +31,35 @@ const accountStyles = StyleSheet.create({
 
   formPrimaryButton: {
     height: 42,
-    marginTop: 5,
+    backgroundColor: "#D9B77E",
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: 8,
   },
 
   formSecondaryButton: {
     height: 42,
     backgroundColor: "#29221A",
+    alignItems: "center",
+    justifyContent: "center",
     borderRadius: 8,
-  },
-
-  formButtonText: {
-    fontWeight: "500",
   },
 
   formText: {
     color: "#000",
     fontSize: 16,
+    textAlign: "center",
+    marginVertical: 8,
   },
 
   smallText: {
     color: "#000",
     fontSize: 14,
-  },
-
-  // area para o Login
-  loginContent: {
-    justifyContent: "center",
-  },
-
-  separator: {
+    marginBottom: 2,
+    padding: 2,
     textAlign: "center",
-    marginVertical: 8,
   },
 
-  forgotButton: {
-    alignItems: "center",
-    marginTop: 16,
-  },
-
-  // area para a criação de conta
   registerScroll: {
     flexGrow: 1,
     paddingBottom: 25,
@@ -97,12 +90,6 @@ const accountStyles = StyleSheet.create({
   links: {
     marginLeft: 21,
     marginTop: 5,
-  },
-
-  linkText: {
-    marginBottom: 2,
-    padding: 2,
-    textAlign: "center",
   },
 });
 
