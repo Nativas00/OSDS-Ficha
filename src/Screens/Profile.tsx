@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useRef, useState } from "react";
+import { salvarPersonagem } from "../database/personagens";
 import { Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import styles from "../style/StylesOverall";
@@ -10,13 +11,42 @@ import type { RootStackParamList } from "../Navigation/types";
 type Props = NativeStackScreenProps<RootStackParamList, "Profile">;
 
 const campos = [
-  { id: 1, rotulo: "NOME:", dica: "Defina o seu Nome" },
-  { id: 2, rotulo: "PASSADO:", dica: "Defina o seu Passado" },
-  { id: 3, rotulo: "APARENCIA:", dica: "Defina o sua Aparencia" },
-  { id: 4, rotulo: "OBJETIVOS:", dica: "Defina o seu Objetivos" },
-];
+  { id: "nome", rotulo: "NOME:", dica: "Defina o seu Nome" },
+  { id: "passado", rotulo: "PASSADO:", dica: "Defina o seu Passado" },
+  { id: "aparencia", rotulo: "APARENCIA:", dica: "Defina o sua Aparencia" },
+  { id: "objetivos", rotulo: "OBJETIVOS:", dica: "Defina o seu Objetivos" },
+] as const;
 
-export default function Profile({ navigation }: Props) {
+export default function Profile({ navigation, route }: Props) {
+  const [perfil, setPerfil] = useState({ nome: "", passado: "", aparencia: "", objetivos: "" });
+  const [mensagem, setMensagem] = useState("");
+  const [salvando, setSalvando] = useState(false);
+  const envioEmAndamento = useRef(false);
+
+  async function concluir() {
+    if (envioEmAndamento.current) return;
+    if (!perfil.nome.trim()) {
+      setMensagem("Digite o nome do personagem.");
+      return;
+    }
+
+    envioEmAndamento.current = true;
+    setSalvando(true);
+    setMensagem("");
+    try {
+      await salvarPersonagem(route.params, perfil);
+      navigation.popTo("Home", { usuario: route.params.usuario });
+    } catch (erro) {
+      console.error(erro);
+      setMensagem(String(erro).includes("Limite de cinco personagens")
+        ? "Você já tem cinco personagens."
+        : "Não foi possível salvar a ficha.");
+    } finally {
+      envioEmAndamento.current = false;
+      setSalvando(false);
+    }
+  }
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={newCharacterStyle.scroll}>
@@ -39,6 +69,9 @@ export default function Profile({ navigation }: Props) {
                 <TextInput
                   style={newCharacterStyle.lightText}
                   placeholder={campo.dica}
+                  value={perfil[campo.id]}
+                  editable={!salvando}
+                  onChangeText={(texto) => setPerfil((atual) => ({ ...atual, [campo.id]: texto }))}
                   placeholderTextColor="#777"
                 ></TextInput>
               </View>
@@ -46,9 +79,10 @@ export default function Profile({ navigation }: Props) {
           </View>
         ))}
 
+        {mensagem !== "" && <Text style={newCharacterStyle.note}>{mensagem}</Text>}
         <View style={newCharacterStyle.centerBox}>
-          <TouchableOpacity style={styles.primaryButton}>
-            <Text style={styles.primaryButtonText}>Concluir</Text>
+          <TouchableOpacity style={styles.primaryButton} onPress={concluir} disabled={salvando}>
+            <Text style={styles.primaryButtonText}>{salvando ? "Salvando..." : "Concluir"}</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -60,7 +94,7 @@ export default function Profile({ navigation }: Props) {
       ></Image>
 
       <View style={newCharacterStyle.arrowRow}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity disabled={salvando} onPress={() => navigation.goBack()}>
           <Text style={newCharacterStyle.arrowText}>←</Text>
         </TouchableOpacity>
       </View>

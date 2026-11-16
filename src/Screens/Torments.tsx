@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { sortearTormento } from "../database/personagens";
 import { Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
 
 import styles from "../style/StylesOverall";
@@ -9,7 +10,30 @@ import type { RootStackParamList } from "../Navigation/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Torments">;
 
-export default function Torments({ navigation }: Props) {
+export default function Torments({ navigation, route }: Props) {
+  const [tormento, setTormento] = useState("");
+  const [tormentoId, setTormentoId] = useState<number | null>(null);
+  const [mensagem, setMensagem] = useState("");
+  const [sorteando, setSorteando] = useState(false);
+
+  async function sortear() {
+    setSorteando(true);
+    setMensagem("");
+    try {
+      const sorteado = await sortearTormento();
+      if (sorteado) {
+        setTormento(sorteado.descricao);
+        setTormentoId(sorteado.id);
+      } else {
+        setMensagem("O catálogo está vazio. Escreva um tormento para continuar.");
+      }
+    } catch {
+      setMensagem("Não foi possível sortear um tormento.");
+    } finally {
+      setSorteando(false);
+    }
+  }
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={newCharacterStyle.scroll}>
@@ -33,6 +57,13 @@ export default function Torments({ navigation }: Props) {
             <TextInput
               style={newCharacterStyle.lightText}
               placeholder="Defina o seu Tormento"
+              value={tormento}
+              editable={!sorteando}
+              onChangeText={(texto) => {
+                setTormento(texto);
+                setTormentoId(null);
+                setMensagem("");
+              }}
               placeholderTextColor="#777"
             ></TextInput>
           </View>
@@ -41,11 +72,12 @@ export default function Torments({ navigation }: Props) {
         <Text style={newCharacterStyle.separator}>OU</Text>
 
         <View style={newCharacterStyle.centerBox}>
-          <TouchableOpacity style={styles.lightBox}>
+          <TouchableOpacity style={styles.lightBox} onPress={sortear} disabled={sorteando}>
             <Text style={newCharacterStyle.lightText}>Role os Dados aqui</Text>
             <Text style={newCharacterStyle.boxIcon}>🎲</Text>
           </TouchableOpacity>
         </View>
+        {mensagem !== "" && <Text style={newCharacterStyle.note}>{mensagem}</Text>}
       </ScrollView>
 
       <Image
@@ -59,7 +91,8 @@ export default function Torments({ navigation }: Props) {
           <Text style={newCharacterStyle.arrowText}>←</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate("Skills")}>
+        <TouchableOpacity disabled={sorteando || !tormento.trim()}
+          onPress={() => navigation.navigate("Skills", { ...route.params, tormento: tormento.trim(), tormentoId })}>
           <Text style={newCharacterStyle.arrowText}>→</Text>
         </TouchableOpacity>
       </View>
