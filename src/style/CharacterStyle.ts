@@ -267,7 +267,6 @@ const characterStyle = StyleSheet.create({
 
   skillsPanel: {
     flex: 1,
-    minHeight: 330,
   },
 
   skillsInput: {
@@ -294,15 +293,6 @@ const characterStyle = StyleSheet.create({
 
   levelBoxSmall: {
     flex: 1.2,
-  },
-
-  canyon: {
-    position: "absolute",
-    right: 0,
-    bottom: 0,
-    aspectRatio: 268 / 586,
-    height: "46%",
-    opacity: 0.9,
   },
 
   diceButton: {
