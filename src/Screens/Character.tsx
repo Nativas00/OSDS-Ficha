@@ -21,7 +21,10 @@ import {
   obterPersonagem,
   atualizarPersonagem,
   type AtualizacaoPersonagem,
+  type DadosPersonagem,
 } from "../database/personagens";
+
+import { buscarRolagem } from "../Services/rolagem";
 
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import type { RootStackParamList } from "../Navigation/types";
@@ -31,21 +34,6 @@ type Props = NativeStackScreenProps<RootStackParamList, "Character">;
 const NIVEIS = [1, 2, 3, 4, 5];
 
 const atributos = ["Físico", "Agilidade", "Intelecto", "Coragem"];
-
-const antecedentes = [
-  "Natureza",
-  "Guerra",
-  "Falência",
-  "Mecânica",
-  "Tiroteio",
-  "Pastoreio",
-  "Exploração",
-  "Saber",
-  "Roubo",
-  "Trapaça",
-  "Luta",
-  "Medicina",
-];
 
 const INTRO_MS = 1700;
 
@@ -58,6 +46,7 @@ export default function Character({ navigation, route }: Props) {
   const [nivelAberto, setNivelAberto] = useState(false);
 
   const [valores, setValores] = useState<Record<string, number>>({});
+  const [antecedentes, setAntecedentes] = useState<DadosPersonagem["antecedentes"]>([]);
   const [dados, setDados] = useState({
     vida: "",
     defesa: "",
@@ -73,7 +62,8 @@ export default function Character({ navigation, route }: Props) {
   const [salvando, setSalvando] = useState(false);
   const [mensagem, setMensagem] = useState("");
 
-  const [dado, setDado] = useState<number | null>(null);
+  const [dado, setDado] = useState<string | null>(null);
+  const rolando = useRef(false);
   const [introVisivel, setIntroVisivel] = useState(criando);
 
   const introOpacity = useRef(new Animated.Value(1)).current;
@@ -105,10 +95,14 @@ export default function Character({ navigation, route }: Props) {
           "Agilidade": personagem.agilidade,
           "Intelecto": personagem.intelecto,
           "Coragem": personagem.coragem,
-          ...(personagem.antecedentes_json
-            ? JSON.parse(personagem.antecedentes_json)
-            : {}),
+          ...Object.fromEntries(
+            personagem.antecedentes.map((antecedente) => [
+              antecedente.nome,
+              antecedente.pontos,
+            ])
+          ),
         });
+        setAntecedentes(personagem.antecedentes);
 
         setDados({
           vida: String(personagem.vida_atual ?? personagem.vida_maxima ?? ""),
@@ -116,7 +110,8 @@ export default function Character({ navigation, route }: Props) {
           acoes: String(personagem.acoes ?? ""),
           tormento: personagem.tormento ?? "",
           recompensa: String(personagem.recompensa ?? ""),
-          habilidades: personagem.habilidades_texto ?? "",
+          habilidades:
+            personagem.habilidades_texto || personagem.habilidades.join("\n"),
           reputacao: personagem.reputacao ?? "",
           dinheiro: String(personagem.dinheiro ?? ""),
         });
@@ -198,7 +193,10 @@ export default function Character({ navigation, route }: Props) {
         dinheiro: numero(dados.dinheiro),
         reputacao: dados.reputacao,
         antecedentes: Object.fromEntries(
-          antecedentes.map((nome) => [nome, valores[nome] ?? 0])
+          antecedentes.map((antecedente) => [
+            antecedente.id,
+            valores[antecedente.nome] ?? 0,
+          ])
         ),
         habilidades: dados.habilidades,
       };
@@ -231,16 +229,35 @@ export default function Character({ navigation, route }: Props) {
     }
   };
 
-  const rolarDado = () => {
+  const rolarDado = async (nomeCampo?: string) => {
+    if (rolando.current) return;
+
+    rolando.current = true;
     diceSpin.setValue(0);
-    setDado(null);
+    setDado("Rolando...");
 
     Animated.timing(diceSpin, {
       toValue: 1,
       duration: 700,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: true,
-    }).start(() => setDado(Math.floor(Math.random() * 6) + 1));
+    }).start();
+
+    try {
+      const total = await buscarRolagem();
+
+      if (nomeCampo) {
+        const bonus = valores[nomeCampo] ?? 0;
+        setDado(`${nomeCampo}: ${total} + ${bonus} = ${total + bonus}`);
+      } else {
+        setDado(String(total));
+      }
+    } catch (erro) {
+      console.error(erro);
+      setDado("Falha ao rolar o dado");
+    } finally {
+      rolando.current = false;
+    }
   };
 
   const campoDots = (nomeCampo: string, indice: number) => (
@@ -249,6 +266,7 @@ export default function Character({ navigation, route }: Props) {
         style={characterStyle.traitName}
         numberOfLines={1}
         adjustsFontSizeToFit
+        onPress={() => rolarDado(nomeCampo)}
       >
         {nomeCampo}
       </Text>
@@ -290,7 +308,7 @@ export default function Character({ navigation, route }: Props) {
     <View style={styles.container}>
       <Image
         source={require("../../assets/canion.png")}
-        style={characterStyle.canyon}
+        style={styles.canyon}
         resizeMode="contain"
       />
 
@@ -422,7 +440,9 @@ export default function Character({ navigation, route }: Props) {
               <Text style={characterStyle.panelCenterTitle}>
                 Antecedentes
               </Text>
-              {antecedentes.map(campoDots)}
+              {antecedentes.map((antecedente, indice) =>
+                campoDots(antecedente.nome, indice)
+              )}
             </View>
           </Reveal>
 
@@ -517,7 +537,7 @@ export default function Character({ navigation, route }: Props) {
 
       <TouchableOpacity
         style={characterStyle.diceButton}
-        onPress={rolarDado}
+        onPress={() => rolarDado()}
       >
         <Animated.Text
           style={[

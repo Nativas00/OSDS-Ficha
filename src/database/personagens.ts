@@ -221,8 +221,9 @@ export type DadosPersonagem = {
   recompensa: number | null;
   dinheiro: number | null;
   reputacao: string | null;
-  antecedentes_json: string | null;
   habilidades_texto: string | null;
+  antecedentes: { id: number; nome: string; pontos: number }[];
+  habilidades: string[];
 };
 
 export type AtualizacaoPersonagem = {
@@ -238,7 +239,7 @@ export type AtualizacaoPersonagem = {
   recompensa: number;
   dinheiro: number;
   reputacao: string;
-  antecedentes: Record<string, number>;
+  antecedentes: Record<number, number>;
   habilidades: string;
 };
 
@@ -250,12 +251,6 @@ async function garantirCamposExtras() {
   );
 
   const existentes = colunas.map((coluna) => coluna.name);
-
-  if (!existentes.includes("antecedentes_json")) {
-    await db.execAsync(
-      "ALTER TABLE personagens ADD COLUMN antecedentes_json TEXT"
-    );
-  }
 
   if (!existentes.includes("habilidades_texto")) {
     await db.execAsync(
@@ -269,17 +264,44 @@ export async function obterPersonagem(personagemId: string) {
 
   const db = await prepararTabelas();
 
-  return db.getFirstAsync<DadosPersonagem>(
+  const personagem = await db.getFirstAsync<Omit<DadosPersonagem, "antecedentes" | "habilidades">>(
     `SELECT
       id, nome, nivel,
       fisico, agilidade, intelecto, coragem,
       vida_maxima, vida_atual, defesa, acoes,
       tormento, recompensa, dinheiro, reputacao,
-      antecedentes_json, habilidades_texto
+      habilidades_texto
     FROM personagens
     WHERE id = ?`,
     personagemId
   );
+
+  if (!personagem) return null;
+
+  const antecedentes = await db.getAllAsync<DadosPersonagem["antecedentes"][number]>(
+    `SELECT a.id, a.nome, COALESCE(pa.pontos, 0) AS pontos
+    FROM antecedentes a
+    LEFT JOIN personagem_antecedentes pa
+      ON pa.antecedente_id = a.id AND pa.personagem_id = ?
+    WHERE a.ativo = 1
+    ORDER BY a.ordem, a.id`,
+    personagemId
+  );
+
+  const habilidades = await db.getAllAsync<{ nome: string }>(
+    `SELECT h.nome
+    FROM personagem_habilidades ph
+    JOIN habilidades h ON h.id = ph.habilidade_id
+    WHERE ph.personagem_id = ?
+    ORDER BY h.nome`,
+    personagemId
+  );
+
+  return {
+    ...personagem,
+    antecedentes,
+    habilidades: habilidades.map((habilidade) => habilidade.nome),
+  };
 }
 
 export async function atualizarPersonagem(
@@ -290,43 +312,61 @@ export async function atualizarPersonagem(
 
   const db = await prepararTabelas();
 
-  const resultado = await db.runAsync(
-    `UPDATE personagens SET
-      nivel = ?,
-      fisico = ?,
-      agilidade = ?,
-      intelecto = ?,
-      coragem = ?,
-      vida_maxima = ?,
-      vida_atual = ?,
-      defesa = ?,
-      acoes = ?,
-      tormento = ?,
-      recompensa = ?,
-      dinheiro = ?,
-      reputacao = ?,
-      antecedentes_json = ?,
-      habilidades_texto = ?,
-      atualizado_em = CURRENT_TIMESTAMP
-    WHERE id = ?`,
-    dados.nivel,
-    dados.fisico,
-    dados.agilidade,
-    dados.intelecto,
-    dados.coragem,
-    dados.vida,
-    dados.vida,
-    dados.defesa,
-    dados.acoes,
-    dados.tormento,
-    dados.recompensa,
-    dados.dinheiro,
-    dados.reputacao,
-    JSON.stringify(dados.antecedentes),
-    dados.habilidades,
-    personagemId
-  );
+  let alteradas = 0;
 
-  return resultado.changes === 1;
+  await db.withTransactionAsync(async () => {
+    const resultado = await db.runAsync(
+      `UPDATE personagens SET
+        nivel = ?,
+        fisico = ?,
+        agilidade = ?,
+        intelecto = ?,
+        coragem = ?,
+        vida_maxima = ?,
+        vida_atual = ?,
+        defesa = ?,
+        acoes = ?,
+        tormento = ?,
+        recompensa = ?,
+        dinheiro = ?,
+        reputacao = ?,
+        habilidades_texto = ?,
+        atualizado_em = CURRENT_TIMESTAMP
+      WHERE id = ?`,
+      dados.nivel,
+      dados.fisico,
+      dados.agilidade,
+      dados.intelecto,
+      dados.coragem,
+      dados.vida,
+      dados.vida,
+      dados.defesa,
+      dados.acoes,
+      dados.tormento,
+      dados.recompensa,
+      dados.dinheiro,
+      dados.reputacao,
+      dados.habilidades,
+      personagemId
+    );
+
+    alteradas = resultado.changes;
+    if (alteradas !== 1) return;
+
+    await db.runAsync(
+      "DELETE FROM personagem_antecedentes WHERE personagem_id = ?",
+      personagemId
+    );
+
+    for (const [antecedenteId, pontos] of Object.entries(dados.antecedentes)) {
+      if (pontos > 0) {
+        await db.runAsync(
+          "INSERT INTO personagem_antecedentes (personagem_id, antecedente_id, pontos) VALUES (?, ?, ?)",
+          personagemId, Number(antecedenteId), pontos
+        );
+      }
+    }
+  });
+
+  return alteradas === 1;
 }
-

@@ -56,8 +56,8 @@ export async function cadastrarUsuario(
 
 export async function conferirLogin(email: string, senha: string) {
   const db = await abrirBanco();
-  const usuario = await db.getFirstAsync<{ id: string; nome_completo: string; senha_hash: string }>(
-    "SELECT id, nome_completo, senha_hash FROM usuarios WHERE email = ?",
+  const usuario = await db.getFirstAsync<{ id: string; nome_usuario: string; senha_hash: string }>(
+    "SELECT id, nome_usuario, senha_hash FROM usuarios WHERE email = ?",
     email.trim().toLowerCase()
   );
   if (!usuario) return null;
@@ -65,7 +65,7 @@ export async function conferirLogin(email: string, senha: string) {
   const [salt, hashSalvo] = usuario.senha_hash.split(":");
   if ((await gerarHash(senha, hexToBytes(salt))) !== hashSalvo) return null;
 
-  return { id: usuario.id, nome: usuario.nome_completo };
+  return { id: usuario.id, nome: usuario.nome_usuario };
 }
 
 export async function encerrarSessao() {
