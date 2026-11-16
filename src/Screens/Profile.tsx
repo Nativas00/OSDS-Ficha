@@ -1,5 +1,12 @@
 import React from "react";
-import { Image, ScrollView, Text, TextInput, TouchableOpacity, View } from "react-native";
+import {
+  Image,
+  ScrollView,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from "react-native";
 
 import styles from "../style/StylesOverall";
 import newCharacterStyle from "../style/NewCharacterStyle";
@@ -27,7 +34,10 @@ export default function Profile({ navigation }: Props) {
         ></Image>
 
         <Text style={newCharacterStyle.paragraph}>
-          Todo sem nome ja teve um nome, todo sem futuro ja teve seu passado, eles podem tentar fugir, mas seu <Text style={newCharacterStyle.highlight}>PERFIL</Text> sempre irá os seguir
+          Todo sem nome ja teve um nome, todo sem futuro ja teve seu passado,
+          eles podem tentar fugir, mas seu{" "}
+          <Text style={newCharacterStyle.highlight}>PERFIL</Text> sempre irá os
+          seguir
         </Text>
 
         {campos.map((campo) => (
@@ -47,7 +57,18 @@ export default function Profile({ navigation }: Props) {
         ))}
 
         <View style={newCharacterStyle.centerBox}>
-          <TouchableOpacity style={styles.primaryButton}>
+          <TouchableOpacity
+            style={styles.primaryButton}
+            onPress={() =>
+              navigation.reset({
+                index: 1,
+                routes: [
+                  { name: "Home" },
+                  { name: "Character", params: { criando: true } },
+                ],
+              })
+            }
+          >
             <Text style={styles.primaryButtonText}>Concluir</Text>
           </TouchableOpacity>
         </View>

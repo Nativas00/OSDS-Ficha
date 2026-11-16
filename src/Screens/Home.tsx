@@ -38,7 +38,10 @@ export default function Home({ navigation }: Props) {
 
           {personagens.map((personagem) => (
             <View key={personagem.id} style={styles.gapMedium}>
-              <TouchableOpacity style={styles.lightBox}>
+              <TouchableOpacity
+                style={styles.lightBox}
+                onPress={() => navigation.navigate("Character")}
+              >
                 <Text style={styles.primaryButtonText}>{personagem.nome.toUpperCase()}</Text>
                 <Text style={styles.primaryButtonText}>Level {personagem.nivel}</Text>
               </TouchableOpacity>

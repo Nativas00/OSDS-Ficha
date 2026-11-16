@@ -10,6 +10,7 @@ import Backgrounds from "../Screens/Backgrounds";
 import Torments from "../Screens/Torments";
 import Skills from "../Screens/Skills";
 import Profile from "../Screens/Profile";
+import Character from "../Screens/Character";
 
 import type { RootStackParamList } from "./types";
 
@@ -32,6 +33,7 @@ export default function AppNavigator() {
       <Stack.Screen name="Torments" component={Torments}></Stack.Screen>
       <Stack.Screen name="Skills" component={Skills}></Stack.Screen>
       <Stack.Screen name="Profile" component={Profile}></Stack.Screen>
+      <Stack.Screen name="Character" component={Character}></Stack.Screen>
     </Stack.Navigator>
   );
 }

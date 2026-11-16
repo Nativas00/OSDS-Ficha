@@ -8,4 +8,5 @@ export type RootStackParamList = {
   Torments: undefined;
   Skills: undefined;
   Profile: undefined;
+  Character: { criando?: boolean } | undefined;
 };
