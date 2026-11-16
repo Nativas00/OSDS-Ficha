@@ -1,6 +1,9 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
+import { useFocusEffect } from "@react-navigation/native";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
+import { listarPersonagens, type PersonagemResumido } from "../database/personagens";
+import { encerrarSessao } from "../database/usuarios";
 import styles from "../style/StylesOverall";
 
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
@@ -9,10 +12,31 @@ import type { RootStackParamList } from "../Navigation/types";
 type Props = NativeStackScreenProps<RootStackParamList, "Home">;
 
 const MAX_PERSONAGENS = 5;
-const usuario = "*PLACEHOLDER*";
-const personagens = [{ id: 1, nome: "Arthur Morgan", nivel: 1 }];
+export default function Home({ navigation, route }: Props) {
+  const { usuario } = route.params;
+  const [personagens, setPersonagens] = useState<PersonagemResumido[]>([]);
+  const [carregando, setCarregando] = useState(true);
+  const [mensagem, setMensagem] = useState("");
 
-export default function Home({ navigation }: Props) {
+  useFocusEffect(useCallback(() => {
+    let ativa = true;
+    setCarregando(true);
+    setMensagem("");
+    listarPersonagens(usuario.id)
+      .then((lista) => {
+        if (ativa) setPersonagens(lista);
+      })
+      .catch((erro) => {
+        console.error(erro);
+        if (ativa) setMensagem("Não foi possível carregar as fichas.");
+      })
+      .finally(() => {
+        if (ativa) setCarregando(false);
+      });
+
+    return () => { ativa = false; };
+  }, [usuario.id]));
+
   return (
     <View style={styles.container}>
       <Image
@@ -27,7 +51,7 @@ export default function Home({ navigation }: Props) {
           style={styles.bannerLogo}
         ></Image>
 
-        <Text style={styles.homeTitle}>Seja bem vindo,{usuario}</Text>
+        <Text style={styles.homeTitle}>Seja bem-vindo, {usuario.nome}</Text>
 
         <Text style={styles.secondaryText}>
           Aqui estão aqueles que são queimados pelo sol escaldante do Oeste
@@ -35,6 +59,9 @@ export default function Home({ navigation }: Props) {
 
         <View style={styles.buttons}>
           <Text style={styles.secondaryButtonText}>PERSONAGENS ({personagens.length}/{MAX_PERSONAGENS}):</Text>
+
+          {carregando && <Text style={styles.secondaryText}>Carregando fichas...</Text>}
+          {mensagem !== "" && <Text style={styles.secondaryText}>{mensagem}</Text>}
 
           {personagens.map((personagem) => (
             <View key={personagem.id} style={styles.gapMedium}>
@@ -47,16 +74,18 @@ export default function Home({ navigation }: Props) {
 
           <TouchableOpacity
             style={styles.secondaryButton}
-            onPress={() => navigation.navigate("Attributes")}
+            disabled={carregando || mensagem !== "" || personagens.length >= MAX_PERSONAGENS}
+            onPress={() => navigation.navigate("Attributes", { usuario })}
           >
             <Text style={styles.secondaryButtonText}>Criar novo cowboy +</Text>
           </TouchableOpacity>
         </View>
 
         <TouchableOpacity
-          onPress={() =>
-            navigation.reset({ index: 0, routes: [{ name: "FirstScreen" }] })
-          }
+          onPress={() => {
+            void encerrarSessao().catch(() => {});
+            navigation.reset({ index: 0, routes: [{ name: "FirstScreen" }] });
+          }}
         >
           <Text style={styles.secondaryText}>Sair da Conta</Text>
         </TouchableOpacity>

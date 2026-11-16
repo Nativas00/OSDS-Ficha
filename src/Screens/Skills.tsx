@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { listarHabilidades } from "../database/personagens";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 import styles from "../style/StylesOverall";
@@ -9,9 +10,33 @@ import type { RootStackParamList } from "../Navigation/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Skills">;
 
-const escolhas = [1, 2];
+export default function Skills({ navigation, route }: Props) {
+  const [habilidades, setHabilidades] = useState<{ id: number; nome: string; descricao: string | null }[] | null>(null);
+  const [descricaoAberta, setDescricaoAberta] = useState<number | null>(null);
+  const [escolhas, setEscolhas] = useState<number[]>([]);
+  const [mensagem, setMensagem] = useState("Carregando habilidades...");
 
-export default function Skills({ navigation }: Props) {
+  useEffect(() => {
+    let ativa = true;
+    listarHabilidades().then((lista) => {
+      if (ativa) {
+        setHabilidades(lista);
+        setMensagem(lista.length < 2 ? "São necessárias duas habilidades no catálogo para continuar." : "");
+      }
+    }).catch(() => {
+      if (ativa) setMensagem("Não foi possível carregar as habilidades.");
+    });
+    return () => { ativa = false; };
+  }, []);
+
+  function selecionar(id: number) {
+    setEscolhas((atuais) => {
+      if (atuais.includes(id)) return atuais.filter((escolha) => escolha !== id);
+      if (atuais.length === 2) return atuais;
+      return [...atuais, id];
+    });
+  }
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={newCharacterStyle.scroll}>
@@ -34,17 +59,36 @@ export default function Skills({ navigation }: Props) {
         </View>
 
         <Text style={newCharacterStyle.note}>
-          *Para que consiga saber oque cada habilidade faz, Abra o seu livro de regras do o Som das Seis
+          Toque no nome para escolher e no ícone de informação para ver o efeito.
         </Text>
 
-        {escolhas.map((escolha) => (
-          <View key={escolha} style={newCharacterStyle.centerBox}>
-            <TouchableOpacity style={styles.lightBox}>
-              <Text style={newCharacterStyle.lightText} numberOfLines={1} adjustsFontSizeToFit>
-                ESCOLHA UMA HABILIDADE
-              </Text>
-              <Text style={newCharacterStyle.boxIcon}>▼</Text>
-            </TouchableOpacity>
+        {mensagem !== "" && <Text style={newCharacterStyle.note}>{mensagem}</Text>}
+        {habilidades?.map((habilidade) => (
+          <View key={habilidade.id} style={newCharacterStyle.centerBox}>
+            <View style={styles.lightBox}>
+              <TouchableOpacity
+                style={{ flex: 1 }}
+                onPress={() => selecionar(habilidade.id)}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: escolhas.includes(habilidade.id) }}
+              >
+                <Text style={newCharacterStyle.lightText}>
+                  {escolhas.includes(habilidade.id) ? "✓ " : ""}{habilidade.nome}
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                accessibilityRole="button"
+                accessibilityLabel={`Descrição de ${habilidade.nome}`}
+                accessibilityState={{ expanded: descricaoAberta === habilidade.id }}
+                hitSlop={8}
+                onPress={() => setDescricaoAberta((atual) => atual === habilidade.id ? null : habilidade.id)}
+              >
+                <Text style={newCharacterStyle.boxIcon}>ⓘ</Text>
+              </TouchableOpacity>
+            </View>
+            {descricaoAberta === habilidade.id && (
+              <Text style={newCharacterStyle.note}>{habilidade.descricao ?? "Descrição indisponível."}</Text>
+            )}
           </View>
         ))}
       </ScrollView>
@@ -60,7 +104,8 @@ export default function Skills({ navigation }: Props) {
           <Text style={newCharacterStyle.arrowText}>←</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate("Profile")}>
+        <TouchableOpacity disabled={escolhas.length !== 2}
+          onPress={() => navigation.navigate("Profile", { ...route.params, habilidades: escolhas })}>
           <Text style={newCharacterStyle.arrowText}>→</Text>
         </TouchableOpacity>
       </View>
