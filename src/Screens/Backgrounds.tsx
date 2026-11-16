@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import { listarAntecedentes } from "../database/personagens";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 import styles from "../style/StylesOverall";
@@ -9,18 +10,35 @@ import type { RootStackParamList } from "../Navigation/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Backgrounds">;
 
-const antecedentes = [
-  { id: 1, nome: "Combate", pontos: 1, cor: newCharacterStyle.optionSpecial },
-  { id: 2, nome: "Labuta", pontos: 0, cor: newCharacterStyle.optionActive },
-  { id: 3, nome: "Negócios", pontos: 0, cor: newCharacterStyle.optionActive },
-  { id: 4, nome: "Montaria", pontos: 0, cor: newCharacterStyle.optionCard },
-  { id: 5, nome: "Exploração", pontos: 0, cor: newCharacterStyle.optionCard },
-  { id: 6, nome: "Medicina", pontos: 0, cor: newCharacterStyle.optionActive },
-  { id: 7, nome: "Tradição", pontos: 0, cor: newCharacterStyle.optionActive },
-  { id: 8, nome: "Roubo", pontos: 0, cor: newCharacterStyle.optionCard },
-];
+export default function Backgrounds({ navigation, route }: Props) {
+  const [antecedentes, setAntecedentes] = useState<{ id: number; nome: string }[]>([]);
+  const [pontos, setPontos] = useState<Record<number, number>>({});
+  const [mensagem, setMensagem] = useState("Carregando antecedentes...");
+  const totalPontos = 4 + route.params.atributos.intelecto;
+  const restantes = totalPontos - Object.values(pontos).reduce((total, valor) => total + valor, 0);
 
-export default function Backgrounds({ navigation }: Props) {
+  useEffect(() => {
+    let ativa = true;
+    listarAntecedentes().then((lista) => {
+      if (ativa) {
+        setAntecedentes(lista);
+        setMensagem(lista.length ? "" : "Nenhum antecedente disponível.");
+      }
+    }).catch(() => {
+      if (ativa) setMensagem("Não foi possível carregar os antecedentes.");
+    });
+    return () => { ativa = false; };
+  }, []);
+
+  function alterarPontos(id: number, valor: number) {
+    setPontos((atuais) => {
+      const novoValor = (atuais[id] ?? 0) + valor;
+      const total = Object.values(atuais).reduce((soma, pontos) => soma + pontos, 0);
+      if (novoValor < 0 || novoValor > 2 || total + valor > totalPontos) return atuais;
+      return { ...atuais, [id]: novoValor };
+    });
+  }
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={newCharacterStyle.scroll}>
@@ -35,26 +53,28 @@ export default function Backgrounds({ navigation }: Props) {
         </Text>
 
         <Text style={newCharacterStyle.paragraph}>
-          Distribua 4 pontos entre os <Text style={newCharacterStyle.highlight}>ANTECEDENTES</Text> abaixo. É possível colocar mais de um ponto em cada <Text style={newCharacterStyle.highlight}>ANTECEDENTE</Text> com o máximo de 2 no primeiro nível.
+          Distribua {totalPontos} pontos entre os <Text style={newCharacterStyle.highlight}>ANTECEDENTES</Text> abaixo. É possível colocar mais de um ponto em cada <Text style={newCharacterStyle.highlight}>ANTECEDENTE</Text> com o máximo de 2 no primeiro nível.
         </Text>
 
         <Text style={newCharacterStyle.note}>
           *É altamente Recomendado colocar pelo menos 1 ponto em combate, se não seu personagem será inútil durante cenas de luta/tiroteio
         </Text>
 
+        <Text style={newCharacterStyle.note}>Pontos restantes: {restantes}</Text>
+        {mensagem !== "" && <Text style={newCharacterStyle.note}>{mensagem}</Text>}
         <View style={newCharacterStyle.optionGrid}>
           {antecedentes.map((antecedente) => (
             <View key={antecedente.id} style={newCharacterStyle.optionHalf}>
-              <View style={antecedente.cor}>
-                <TouchableOpacity>
+              <View style={(pontos[antecedente.id] ?? 0) > 0 ? newCharacterStyle.optionActive : newCharacterStyle.optionCard}>
+                <TouchableOpacity onPress={() => alterarPontos(antecedente.id, -1)}>
                   <Text style={newCharacterStyle.optionButton}>-</Text>
                 </TouchableOpacity>
 
                 <Text style={newCharacterStyle.optionText} numberOfLines={1} adjustsFontSizeToFit>
-                  {antecedente.nome}: {antecedente.pontos}
+                  {antecedente.nome}: {pontos[antecedente.id] ?? 0}
                 </Text>
 
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => alterarPontos(antecedente.id, 1)}>
                   <Text style={newCharacterStyle.optionButton}>+</Text>
                 </TouchableOpacity>
               </View>
@@ -74,7 +94,7 @@ export default function Backgrounds({ navigation }: Props) {
           <Text style={newCharacterStyle.arrowText}>←</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate("Torments")}>
+        <TouchableOpacity disabled={restantes !== 0} onPress={() => navigation.navigate("Torments", { ...route.params, antecedentes: pontos })}>
           <Text style={newCharacterStyle.arrowText}>→</Text>
         </TouchableOpacity>
       </View>

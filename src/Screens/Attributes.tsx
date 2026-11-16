@@ -1,22 +1,38 @@
-import React from "react";
+import React, { useState } from "react";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 import styles from "../style/StylesOverall";
 import newCharacterStyle from "../style/NewCharacterStyle";
 
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
-import type { RootStackParamList } from "../Navigation/types";
+import type { PontosAtributos, RootStackParamList } from "../Navigation/types";
 
 type Props = NativeStackScreenProps<RootStackParamList, "Attributes">;
 
 const atributos = [
-  { id: 1, nome: "Físico", bonus: "mais vida máxima", cor: newCharacterStyle.optionActive },
-  { id: 2, nome: "Agilidade", bonus: "mais ações", cor: newCharacterStyle.optionCard },
-  { id: 3, nome: "Intelecto", bonus: "mais antecedentes", cor: newCharacterStyle.optionActive },
-  { id: 4, nome: "Coragem", bonus: "mais iniciativa", cor: newCharacterStyle.optionCard },
-];
+  { id: "fisico", nome: "Físico", bonus: "mais vida máxima", cor: newCharacterStyle.optionActive },
+  { id: "agilidade", nome: "Agilidade", bonus: "mais ações", cor: newCharacterStyle.optionCard },
+  { id: "intelecto", nome: "Intelecto", bonus: "mais pontos de antecedentes", cor: newCharacterStyle.optionActive },
+  { id: "coragem", nome: "Coragem", bonus: "mais iniciativa", cor: newCharacterStyle.optionCard },
+] as const;
 
-export default function Attributes({ navigation }: Props) {
+export default function Attributes({ navigation, route }: Props) {
+  const [pontos, setPontos] = useState<PontosAtributos>({
+    fisico: 0,
+    agilidade: 0,
+    intelecto: 0,
+    coragem: 0,
+  });
+  const restantes = 4 - pontos.fisico - pontos.agilidade - pontos.intelecto - pontos.coragem;
+
+  function alterarPontos(atributo: keyof PontosAtributos, valor: number) {
+    setPontos((atuais) => {
+      const total = atuais.fisico + atuais.agilidade + atuais.intelecto + atuais.coragem;
+      if (atuais[atributo] + valor < 0 || total + valor > 4) return atuais;
+      return { ...atuais, [atributo]: atuais[atributo] + valor };
+    });
+  }
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={newCharacterStyle.scroll}>
@@ -38,19 +54,21 @@ export default function Attributes({ navigation }: Props) {
           *Mais informações detalhadas no livro de regras O Som das Seis
         </Text>
 
+        <Text style={newCharacterStyle.note}>Pontos restantes: {restantes}</Text>
+
         {atributos.map((atributo) => (
           <View key={atributo.id} style={newCharacterStyle.optionColumn}>
             <View style={atributo.cor}>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => alterarPontos(atributo.id, -1)} disabled={pontos[atributo.id] === 0}>
                 <Text style={newCharacterStyle.optionButton}>-</Text>
               </TouchableOpacity>
 
               <Text style={newCharacterStyle.optionText}>
-                {atributo.nome}: 0{"\n"}
+                {atributo.nome}: {pontos[atributo.id]}{"\n"}
                 {atributo.bonus}
               </Text>
 
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => alterarPontos(atributo.id, 1)} disabled={restantes === 0}>
                 <Text style={newCharacterStyle.optionButton}>+</Text>
               </TouchableOpacity>
             </View>
@@ -69,7 +87,13 @@ export default function Attributes({ navigation }: Props) {
           <Text style={newCharacterStyle.arrowText}>←</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity onPress={() => navigation.navigate("Backgrounds")}>
+        <TouchableOpacity
+          disabled={restantes !== 0}
+          onPress={() => navigation.navigate("Backgrounds", {
+            usuario: route.params.usuario,
+            atributos: pontos,
+          })}
+        >
           <Text style={newCharacterStyle.arrowText}>→</Text>
         </TouchableOpacity>
       </View>

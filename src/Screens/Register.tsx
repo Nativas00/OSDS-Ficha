@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { View, ScrollView, TouchableOpacity, Text } from "react-native";
 import { StatusBar } from "expo-status-bar";
 
+import { cadastrarUsuario } from "../database/usuarios";
 import ScreenHeader from "../Components/ScreenHeader";
 import FormInput from "../Components/FormInput";
 import styles from "../style/StylesOverall";
@@ -19,6 +20,47 @@ export default function RegisterScreen({ navigation }: Props) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [acceptedTerms, setAcceptedTerms] = useState(false);
+
+  const [mensagem, setMensagem] = useState("");
+  const [enviando, setEnviando] = useState(false);
+
+  async function criarConta() {
+    setMensagem("");
+    if (!name.trim() || !user.trim() || !email.trim() || !password || !confirmPassword) {
+      setMensagem("Preencha todos os campos.");
+      return;
+    }
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) {
+      setMensagem("Digite um e-mail válido.");
+      return;
+    }
+    if (password.length < 8) {
+      setMensagem("Use pelo menos oito caracteres na senha.");
+      return;
+    }
+    if (password !== confirmPassword) {
+      setMensagem("As senhas precisam ser iguais.");
+      return;
+    }
+    if (!acceptedTerms) {
+      setMensagem("Aceite os termos para continuar.");
+      return;
+    }
+
+    setEnviando(true);
+    try {
+      if (await cadastrarUsuario(name, user, email, password)) {
+        navigation.replace("Login");
+      } else {
+        setMensagem("Este e-mail ou nome de usuário já está em uso.");
+      }
+    } catch (erro) {
+      console.error(erro);
+      setMensagem("Não foi possível criar a conta local.");
+    } finally {
+      setEnviando(false);
+    }
+  }
 
   return (
     <ScrollView
@@ -82,14 +124,14 @@ export default function RegisterScreen({ navigation }: Props) {
             </Text>
           </TouchableOpacity>
 
+          {mensagem !== "" && <Text style={accountStyles.formText}>{mensagem}</Text>}
           <View style={styles.gapMedium}>
             <TouchableOpacity
               style={accountStyles.formPrimaryButton}
-              onPress={() =>
-                navigation.reset({ index: 0, routes: [{ name: "Home" }] })
-              }
+              onPress={criarConta}
+              disabled={enviando}
             >
-              <Text style={styles.primaryButtonText}>Criar conta</Text>
+              <Text style={styles.primaryButtonText}>{enviando ? "Criando..." : "Criar conta"}</Text>
             </TouchableOpacity>
           </View>
 
