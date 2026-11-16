@@ -1,4 +1,3 @@
-
 export type PontosAtributos = {
   fisico: number;
   agilidade: number;
@@ -26,6 +25,7 @@ export type RootStackParamList = {
   FirstScreen: undefined;
   Login: undefined;
   Register: undefined;
+  ForgotPassword: undefined;
 
   Home: { usuario: Usuario };
   Attributes: { usuario: Usuario };
@@ -39,5 +39,12 @@ export type RootStackParamList = {
     habilidades: number[];
   };
 
-  Character: { criando?: boolean } | undefined;
+  Character: {
+    personagemId: string;
+    usuario: {
+      id: string;
+      nome: string;
+    };
+    criando?: boolean;
+  };
 };

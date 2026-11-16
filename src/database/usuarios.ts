@@ -71,3 +71,36 @@ export async function conferirLogin(email: string, senha: string) {
 export async function encerrarSessao() {
   // O Android mantém a conta ativa apenas enquanto a Home está na navegação.
 }
+
+// Verifica se existe uma conta cadastrada com o e-mail informado.
+export async function verificarEmail(email: string) {
+  const db = await abrirBanco();
+
+  const usuario = await db.getFirstAsync<{ id: string }>(
+    "SELECT id FROM usuarios WHERE email = ?",
+    email.trim().toLowerCase()
+  );
+
+  return !!usuario;
+}
+
+// Atualiza a senha mantendo o padrão de segurança do cadastro.
+export async function atualizarSenhaPorEmail(
+  email: string,
+  novaSenha: string
+) {
+  const db = await abrirBanco();
+
+  const salt = await getRandomBytesAsync(16);
+  const hash = await gerarHash(novaSenha, salt);
+
+  const resultado = await db.runAsync(
+    `UPDATE usuarios
+     SET senha_hash = ?, atualizado_em = CURRENT_TIMESTAMP
+     WHERE email = ?`,
+    bytesToHex(salt) + ":" + hash,
+    email.trim().toLowerCase()
+  );
+
+  return resultado.changes === 1;
+}

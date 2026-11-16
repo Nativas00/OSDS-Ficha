@@ -51,7 +51,8 @@ export default function Profile({ navigation, route }: Props) {
     setMensagem("");
 
     try {
-      await salvarPersonagem(route.params, perfil);
+      // Salva apenas uma vez e recupera o ID criado.
+      const personagemId = await salvarPersonagem(route.params, perfil);
 
       navigation.reset({
         index: 1,
@@ -62,7 +63,11 @@ export default function Profile({ navigation, route }: Props) {
           },
           {
             name: "Character",
-            params: { criando: true },
+            params: {
+              personagemId,
+              usuario: route.params.usuario,
+              criando: true,
+            },
           },
         ],
       });
@@ -92,9 +97,7 @@ export default function Profile({ navigation, route }: Props) {
         <Text style={newCharacterStyle.paragraph}>
           Todo sem nome ja teve um nome, todo sem futuro ja teve seu passado,
           eles podem tentar fugir, mas seu{" "}
-          <Text style={newCharacterStyle.highlight}>
-            PERFIL
-          </Text>{" "}
+          <Text style={newCharacterStyle.highlight}>PERFIL</Text>{" "}
           sempre irá os seguir
         </Text>
 

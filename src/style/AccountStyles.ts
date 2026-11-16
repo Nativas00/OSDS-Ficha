@@ -8,6 +8,7 @@ const accountStyles = StyleSheet.create({
   loginContent: {
     flex: 1,
     justifyContent: "center",
+    marginTop: 85,
   },
 
   title: {

@@ -201,4 +201,132 @@ export async function salvarPersonagem(
       );
     }
   });
+
+  return id;
 }
+
+export type DadosPersonagem = {
+  id: string;
+  nome: string;
+  nivel: number;
+  fisico: number;
+  agilidade: number;
+  intelecto: number;
+  coragem: number;
+  vida_maxima: number | null;
+  vida_atual: number | null;
+  defesa: number | null;
+  acoes: number | null;
+  tormento: string | null;
+  recompensa: number | null;
+  dinheiro: number | null;
+  reputacao: string | null;
+  antecedentes_json: string | null;
+  habilidades_texto: string | null;
+};
+
+export type AtualizacaoPersonagem = {
+  nivel: number;
+  fisico: number;
+  agilidade: number;
+  intelecto: number;
+  coragem: number;
+  vida: number;
+  defesa: number;
+  acoes: number;
+  tormento: string;
+  recompensa: number;
+  dinheiro: number;
+  reputacao: string;
+  antecedentes: Record<string, number>;
+  habilidades: string;
+};
+
+async function garantirCamposExtras() {
+  const db = await prepararTabelas();
+
+  const colunas = await db.getAllAsync<{ name: string }>(
+    "PRAGMA table_info(personagens)"
+  );
+
+  const existentes = colunas.map((coluna) => coluna.name);
+
+  if (!existentes.includes("antecedentes_json")) {
+    await db.execAsync(
+      "ALTER TABLE personagens ADD COLUMN antecedentes_json TEXT"
+    );
+  }
+
+  if (!existentes.includes("habilidades_texto")) {
+    await db.execAsync(
+      "ALTER TABLE personagens ADD COLUMN habilidades_texto TEXT"
+    );
+  }
+}
+
+export async function obterPersonagem(personagemId: string) {
+  await garantirCamposExtras();
+
+  const db = await prepararTabelas();
+
+  return db.getFirstAsync<DadosPersonagem>(
+    `SELECT
+      id, nome, nivel,
+      fisico, agilidade, intelecto, coragem,
+      vida_maxima, vida_atual, defesa, acoes,
+      tormento, recompensa, dinheiro, reputacao,
+      antecedentes_json, habilidades_texto
+    FROM personagens
+    WHERE id = ?`,
+    personagemId
+  );
+}
+
+export async function atualizarPersonagem(
+  personagemId: string,
+  dados: AtualizacaoPersonagem
+) {
+  await garantirCamposExtras();
+
+  const db = await prepararTabelas();
+
+  const resultado = await db.runAsync(
+    `UPDATE personagens SET
+      nivel = ?,
+      fisico = ?,
+      agilidade = ?,
+      intelecto = ?,
+      coragem = ?,
+      vida_maxima = ?,
+      vida_atual = ?,
+      defesa = ?,
+      acoes = ?,
+      tormento = ?,
+      recompensa = ?,
+      dinheiro = ?,
+      reputacao = ?,
+      antecedentes_json = ?,
+      habilidades_texto = ?,
+      atualizado_em = CURRENT_TIMESTAMP
+    WHERE id = ?`,
+    dados.nivel,
+    dados.fisico,
+    dados.agilidade,
+    dados.intelecto,
+    dados.coragem,
+    dados.vida,
+    dados.vida,
+    dados.defesa,
+    dados.acoes,
+    dados.tormento,
+    dados.recompensa,
+    dados.dinheiro,
+    dados.reputacao,
+    JSON.stringify(dados.antecedentes),
+    dados.habilidades,
+    personagemId
+  );
+
+  return resultado.changes === 1;
+}
+

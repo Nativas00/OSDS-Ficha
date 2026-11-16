@@ -11,6 +11,7 @@ import Torments from "../Screens/Torments";
 import Skills from "../Screens/Skills";
 import Profile from "../Screens/Profile";
 import Character from "../Screens/Character";
+import ForgotPassword from "../Screens/ForgotPassword";
 
 import type { RootStackParamList } from "./types";
 
@@ -27,6 +28,7 @@ export default function AppNavigator() {
       <Stack.Screen name="FirstScreen" component={First}></Stack.Screen>
       <Stack.Screen name="Login" component={Login}></Stack.Screen>
       <Stack.Screen name="Register" component={Register}></Stack.Screen>
+      <Stack.Screen name="ForgotPassword" component={ForgotPassword} />
       <Stack.Screen name="Home" component={Home}></Stack.Screen>
       <Stack.Screen name="Attributes" component={Attributes}></Stack.Screen>
       <Stack.Screen name="Backgrounds" component={Backgrounds}></Stack.Screen>
