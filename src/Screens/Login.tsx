@@ -30,7 +30,10 @@ export default function LoginScreen({ navigation }: Props) {
     try {
       const usuario = await conferirLogin(email, senha);
       if (usuario) {
-        navigation.reset({ index: 0, routes: [{ name: "Home", params: { usuario } }] });
+        navigation.reset({
+          index: 0,
+          routes: [{ name: "Home", params: { usuario } }],
+        });
       } else {
         setMensagem("E-mail ou senha incorretos.");
       }
@@ -65,14 +68,18 @@ export default function LoginScreen({ navigation }: Props) {
               secureTextEntry
             ></FormInput>
 
-            {mensagem !== "" && <Text style={accountStyles.formText}>{mensagem}</Text>}
+            {mensagem !== "" && (
+              <Text style={accountStyles.formText}>{mensagem}</Text>
+            )}
             <View style={styles.gapSmall}>
               <TouchableOpacity
                 style={accountStyles.formPrimaryButton}
                 onPress={entrar}
                 disabled={enviando}
               >
-                <Text style={styles.primaryButtonText}>{enviando ? "Entrando..." : "Iniciar Sessão"}</Text>
+                <Text style={styles.primaryButtonText}>
+                  {enviando ? "Entrando..." : "Iniciar Sessão"}
+                </Text>
               </TouchableOpacity>
             </View>
 
@@ -85,7 +92,9 @@ export default function LoginScreen({ navigation }: Props) {
               <Text style={styles.secondaryButtonText}>Criar uma conta</Text>
             </TouchableOpacity>
 
-            <TouchableOpacity>
+            <TouchableOpacity
+              onPress={() => navigation.navigate("ForgotPassword")}
+            >
               <Text style={accountStyles.formText}>Esqueci minha senha</Text>
             </TouchableOpacity>
           </View>

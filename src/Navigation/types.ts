@@ -5,7 +5,10 @@ export type PontosAtributos = {
   coragem: number;
 };
 
-type Usuario = { id: string; nome: string };
+type Usuario = {
+  id: string;
+  nome: string;
+};
 
 export type FichaInicial = {
   usuario: Usuario;
@@ -22,10 +25,26 @@ export type RootStackParamList = {
   FirstScreen: undefined;
   Login: undefined;
   Register: undefined;
+  ForgotPassword: undefined;
+
   Home: { usuario: Usuario };
   Attributes: { usuario: Usuario };
-  Backgrounds: { usuario: Usuario; atributos: PontosAtributos };
+  Backgrounds: {
+    usuario: Usuario;
+    atributos: PontosAtributos;
+  };
   Torments: FichaInicial;
   Skills: FichaComTormento;
-  Profile: FichaComTormento & { habilidades: number[] };
+  Profile: FichaComTormento & {
+    habilidades: number[];
+  };
+
+  Character: {
+    personagemId: string;
+    usuario: {
+      id: string;
+      nome: string;
+    };
+    criando?: boolean;
+  };
 };
